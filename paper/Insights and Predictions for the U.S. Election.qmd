@@ -1,0 +1,265 @@
+---
+title: "My title"
+subtitle: "My subtitle if needed"
+author: 
+  - First author
+  - Another author
+thanks: "Code and data are available at: [https://github.com/RohanAlexander/starter_folder](https://github.com/RohanAlexander/starter_folder)."
+date: today
+date-format: long
+abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+format: pdf
+number-sections: true
+bibliography: references.bib
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+
+#### Preamble ####
+# Purpose: Writing the paper for visualizing the data in "About Daily Shelter & Overnight Service Occupancy & Capacity" dataset
+
+# Author: Yiyi Feng
+# Date: 26 September 2024
+# Contact: yiyi.feng@mail.utoronto.ca
+
+####Workspace setup ####
+
+library(dplyr)
+library(ggplot2)
+library(arrow)
+library(janitor)
+library(tidyverse)
+library(here)
+library(modelsummary)
+analysis_data <- read_parquet(here::here("data/02-analysis_data/analysis_data.parquet"))
+```
+
+
+# Introduction
+
+Overview paragraph
+
+Estimand paragraph
+
+Results paragraph
+
+Why it matters paragraph
+
+Telegraphing paragraph: The remainder of this paper is structured as follows. @sec-data....
+
+
+
+
+
+
+# Data {#sec-data}
+
+## Overview
+
+In this analysis, we used R [@citeR] to investigate polling data on public sentiment leading up to the election. Our dataset, sourced from FiveThirtyEight [@fivethirtyeight2024], provides a detailed snapshot of shifting public opinion over time. We examined key factors influencing support percentages, including poll timing, pollster characteristics, and state-specific trends.
+
+Several R packages were instrumental in facilitating data manipulation, modeling, and visualization. Tidyverse served as the foundation for organizing and efficiently analyzing the data, seamlessly integrating multiple analytical tasks [@thereferencecanbewhatever]. The Here package simplified file path management, ensuring smooth data access across systems [@citehere]. We utilized Janitor for comprehensive data cleaning, which helped us identify and correct inconsistencies [@citejanitor], while Lubridate supported the handling of time-related variables [@citelubridate]. Finally, Arrow enabled fast, memory-efficient access to large datasets, a crucial asset when working with extensive polling data [@citearrow]. Our codebase and workflow adhered closely to best practices, as outlined in @tellingstories.
+
+Our group focused on Trump’s approval ratings, aiming to ensure the credibility of the data. To achieve this, we selected only pollsters with numeric grade above 2.0, using data collected from November 15, 2022, to October 27, 2024.
+
+The main useful variables that the data contains are:
+
+- **Support Percentage (pct):** The percentage of respondents supporting each candidate, acting as the primary outcome variable for analysis.
+
+- **State:** The geographical area covered by the poll, either state-specific or nationwide.
+
+- **Poll ID:** A unique identifier for each poll, enabling easy tracking and management of entries.
+
+- **Pollster:**The organization that conducted the poll, providing insight into the methodological quality.
+
+- **Pollscore:** A measure of the pollster's reliability, with lower (often negative) values indicating higher predictive accuracy.
+
+- **Sample Size:** The total number of respondents in each poll, which impacts the poll’s statistical precision and margin of error.
+
+- **Candidate Name:** The name of the candidate evaluated in the poll, allowing for candidate-specific analysis.
+
+- **End Date:** The completion date of the poll, aiding in temporal alignment for trend analyses.
+
+## Measurement
+	
+In this section, we describe the process of transforming raw polling data into a structured dataset for analysis. The data is sourced from actual polls conducted by various organizations across the United States, each using different methodologies to record public support for Donald Trump. This diversity of sources enhances the range and credibility of the data.
+
+Once collected, the poll results are aggregated into comprehensive datasets, such as those provided by FiveThirtyEight [@fivethirtyeight2024]. Key variables include the poll’s end date, pollster identity, state, and a quality score assessing each poll's reliability. These variables play a role in shaping Trump’s approval ratings and can improve our ability to predict his likelihood of becoming the next U.S. President.
+
+This structured dataset enables us to analyze patterns and trends in Trump’s support over time and across regions, allowing us to explore how factors like state, poll score, and pollster influence public sentiment. By grounding our analysis in actual polling data, we ensure greater credibility in our results, ultimately supporting more accurate predictions for the upcoming 2024 U.S. election.
+
+## Outcome variables
+
+### Overview of Trump's Electoral Support
+
+The [@fig-pct] illustrates the distribution of approval ratings for Trump. The majority of the approval ratings fall between 40% and 55%, forming a shape that resembles a normal distribution, with a peak around the 45% to 50% range. This suggests that, within the analyzed sample, most of the approval ratings cluster in this middle range, with relatively few instances of extremely high or low ratings.
+
+The lower frequency of approval ratings below 30% and above 60% indicates that these extremes are relatively uncommon in the dataset. Overall, the concentration of support in this central range suggests a fairly consistent level of public support for Trump.
+
+```{r}
+#| label: fig-pct
+#| fig-cap: Distribution of percentage support for Trump
+#| echo: false
+#| warning: false
+#| message: false
+
+ggplot(analysis_data, aes(x = pct)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "navy") +
+  labs(x = "Percentage support",
+       y = "Frequency") +
+  theme_bw()
+
+```
+
+## Predictor variables
+
+### Summarize of Predictor Variables
+
+Our predictor variables include candidate name, sample size, pollscore, numeric grade, recency weight, and state. We intend to leverage these variables to predict Trump’s likelihood of being elected.
+
+- **Numeric Grade:** A numeric rating indicating each pollster’s reliability.
+
+- **State:** The US state where the poll was conducted, if applicable.
+
+- **Sample Size:** The total number of respondents participating in the poll.
+
+- **Pollscore:** A quantitative measure of the pollster’s reliability, where lower (negative) values suggest higher predictive accuracy.
+
+- **Recency Weight:** A metric used to assess the relevance of polling data based on how close the polling dates are to an upcoming election. It is calculated by evaluating the number of days until the election from both the start and end dates of the poll, normalizing these values against the maximum days from other polls. The resulting weight gives more importance to more recent polling data, reflecting its greater influence on understanding current public sentiment..
+
+- **Candidate Name:** Indicates how recent each poll is, calculated based on the time difference from the most recent poll.
+
+### State
+
+Here we looked at how each state polled in the popular vote. What we found for each state had to do with its party affiliation. the REP partisan states would have a higher Trump vote, above 50 per cent. then there are the swing states where the number of votes generally swings around the 50 mark. And states that are predominantly DEM partisan will have much lower support for Trump generally below 50 per cent
+
+```{r}
+#| label: fig-state
+#| fig-cap: Overview of election data in different states
+#| echo: false
+#| warning: false
+#| message: false
+
+
+ggplot(analysis_data, aes(x = reorder(state, -pct, FUN = mean), y = pct)) +
+  geom_boxplot(fill = "skyblue", color = "black", outlier.color = "red", outlier.shape = 16) +
+  labs(x = "State", y = "Percentage Support", title = "Support Distribution by State") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+### Numeric Grade
+
+```{r}
+#| label: fig-method
+#| fig-cap: Percentage Support of Trump Under Different Voting Methods
+#| echo: false
+#| warning: false
+#| message: false
+
+
+
+```
+
+
+### Sample Size
+
+```{r}
+#| label: fig-method-pct
+#| fig-cap: method-pct
+#| echo: false
+#| warning: false
+#| message: false
+# Convert pct column to numeric if it is not already
+
+
+```
+
+### Pollscore
+
+
+### Recency Weight
+
+
+### Candidate Name
+
+
+## Discussion
+
+
+
+\newpage
+
+# Appendix a. {-}
+
+## Overview of Emerson College Polling Methodology (October 23-25, 2024)
+
+The Emerson College Polling conducted a survey from October 23 to 25, 2024, targeting 1,000 likely voters to investigate the differences in support for various candidates. In this presidential election, 58% support former President Donald Trump, while 39% support Vice President Kamala Harris.
+
+## Population, Frame, and Sample
+
+In this context, the target population consists of likely voters in the U.S. elections, defined by their likelihood to vote in the upcoming elections and their voting history, both of which are self-reported in the survey. The sampling frame specifically focuses on likely voters in Montana, who were reached through a combination of cell phone contacts provided by Aristotle and an online voter panel from CINT. The sample consists of 1,000 likely voters randomly selected from the sampling frame, with their status determined by a combination of voter history, registration status, and demographic data, all of which are self-reported. This methodology provides a balanced overview of Montana voters' priorities, with a credibility interval of +/- 3%.
+
+## Sampling Approach and its trade-offs
+
+Emerson College utilized a mixed-mode sampling approach for its poll of likely voters in Montana. This strategy involved two main methods: sending MMS text messages linked to an online survey using Aristotle’s voter lists and accessing a pre-screened, opt-in online panel from CINT. The MMS method is efficient and cost-effective, allowing participants to complete the survey at their convenience, which can enhance response rates. The online panel broadens coverage to include voters not reachable through text, capturing a wider demographic range across the state. Together, these methods create a diverse sample while reducing costs compared to traditional phone or in-person interviews.
+
+However, this approach has trade-offs. The MMS survey requires recipients to have active cell phones and internet, potentially excluding older or less tech-savvy voters. Additionally, the online panel consists of self-selected participants, which may not fully reflect the general voter population. Mixing data from both sources can introduce inconsistencies, as each method may attract different respondent types, necessitating careful weighting to maintain balance and accuracy. Smaller demographic subsets, such as age, race, or education, carry higher credibility intervals due to reduced sample sizes, limiting precision in analysis. Overall, the mixed approach optimizes reach, reduces costs, and captures a representative snapshot of Montana’s voter priorities, albeit with some limitations.
+
+## Non-response Handling
+
+Emerson College does not provide specific details regarding its non-response management. While it mentions that data were weighted by demographics such as gender, education, race, age, party registration, and region to align with the 2024 likely voter model, this weighting primarily addresses demographic imbalances and does not directly mitigate non-response bias. The survey lacks information on common non-response strategies, such as follow-up attempts, participation incentives, or specific adjustments for non-responders. This absence raises concerns about potential non-response bias, particularly if certain demographic groups were less likely to engage with the survey.
+
+## Questionnaire Design
+
+This questionnaire has strong points. Its straightforward and clear wording makes questions easy for respondents to follow and reduces potential confusion. By focusing on core issues like the economy, housing, and voter approval for specific candidates, it captures key voter concerns in Montana, offering a concise yet comprehensive view. The use of multiple questions around candidate approval, voter issues, and demographics adds depth and helps validate responses across topics.
+However, the questionnaire also has limitations. While demographic questions enhance the survey’s representativeness, smaller groups (e.g., nonbinary individuals) may carry higher credibility intervals, reducing precision for those subgroups. The mixed-mode approach (online panel and mobile) improves access but still risks non-response bias, as certain demographics might be less likely to participate. Overall, the design achieves clarity and breadth, though response biases and sample variations should be considered in interpreting the findings. For example, in this survey of 1,000 Montana voters, only 5 respondents identified as nonbinary or other genders. Since statistical reliability depends on the number of responses, small groups have higher variability, meaning their responses can swing widely due to each individual answer carrying greater weight.
+
+# Appendix b. {-}
+
+## Idealized Methodology for Forecasting the U.S. Presidential Election
+
+We aim to develop a methodology for forecasting U.S. presidential election outcomes by conducting a survey with a $100,000 budget. Using stratified random sampling and multi-mode recruitment, the survey targets 10,000 likely voters across demographic and regional lines. Key measures include data validation checks, weighted analysis, and predictive modeling to ensure accuracy. Results will be enriched by aggregating reputable data sources like FiveThirtyEight for a comprehensive, reliable forecast.
+
+## Budget Allocation
+
+Funding allocations will focus on ensuring thorough and effective sampling, recruitment, data validation, and analysis methods are employed with a total budget of no more than $10,000. The proposed budget breakdown is as follows:
+
+Survey platform costs: $10,000 (subscription fees for online survey tools such as Google Forms or Qualtrics)
+Respondent incentives: $10,000 (gift cards or other incentives to encourage participation)
+Recruitment and staffing: $35,000 (staffing costs for survey distribution and data collection)
+Data analysis tools: $20,000 (statistical software licenses, data cleaning and analysis)
+Marketing and promotion: $10,000 (awareness and engagement campaigns)
+Contingency fund: $5,000 (for unexpected expenses)
+
+## Sampling Approach
+
+The sampling approach will employ a stratified random sampling method to ensure representation across various demographic groups, including age, gender, race, education level, geographical location, and party affiliation. The target population consists of likely voters in the U.S., defined by historical voting behavior and self-reported intentions to vote. A sample size of approximately 10,000 respondents will be aimed at ensuring statistical robustness and a credibility interval of +/- 1% at a 95% confidence level.
+This will be achieved through a combination of national voter registration databases to identify potential respondents. For example, we can utilize the National Voter Registration Act (NVRA) data from the National Association of Secretaries of State (NASS) to access information on registered voters. This database will allow us to filter for likely voters based on their registration status and historical voting behavior, ensuring that our sampling frame is comprehensive and representative of the electorate. By leveraging such reliable sources, we can create a sampling framework that enhances the accuracy of our election forecasts.
+
+## Respondent Recruitment
+
+To reach the target population, a multi-mode recruitment strategy will be implemented:
+Online Surveys: Use Google Forms to distribute the survey electronically.
+Telephone Surveys: Conduct live telephone interviews to capture demographics that might not engage online.
+Text Messaging Surveys: Implement SMS surveys to reach younger demographics and those without regular internet access.
+Incentives: Offer gift cards or other small incentives for participation, particularly for online respondents. This can enhance response rates and engagement.
+
+## Data Validation
+
+To effectively reach our target population and capture a diverse range of perspectives, we will implement a multi-mode recruitment strategy tailored to different demographic groups and communication preferences. This approach includes online surveys using a Google Forms questionnaire, which will be widely distributed through social media, email lists, and community networks to maximize reach among individuals who frequently engage online. The user-friendly platform allows participants to complete the survey quickly and anonymously on any internet-enabled device. The survey can be accessed through the following link: https://forms.gle/oSbad52Vuw9Z9Wf46. Additionally, we will conduct live telephone interviews to include participants who may not be reachable through online channels, ensuring we capture responses from populations that might otherwise be underrepresented. To further engage younger demographics and individuals with limited internet access, we will implement SMS-based surveys, allowing participants to respond quickly via text. To encourage participation and improve response rates, small incentives such as digital gift cards will be offered, particularly for online respondents, with details communicated at the survey's start and awarded upon completion to ensure transparency. This comprehensive approach will enable us to gather a robust and representative dataset, providing valuable insights into the preferences and priorities of voters across multiple demographics.
+
+## Poll Aggregation and Modeling
+
+Poll results will be aggregated using statistical methods to identify trends and analyze historical voting patterns. We will implement a weighted analysis to ensure demographic representation, applying specific weights based on factors such as age, gender, race, and education level, as well as state significance to reflect regional variations in voter behavior. Predictive analytics will primarily involve logistic regression to model voting preferences and forecast election outcomes, supplemented by time-series analysis to track changes in voter sentiment over the campaign period. To enhance our findings, we will combine our data with reputable sources like FiveThirtyEight, utilizing their aggregation techniques to enrich our analysis with broader insights. 
+
+
+
+\newpage
+
+# References
+
