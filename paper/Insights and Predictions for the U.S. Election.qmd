@@ -66,7 +66,11 @@ Several R packages were instrumental in facilitating data manipulation, modeling
 
 Our group focused on Trump’s approval ratings, aiming to ensure the credibility of the data. To achieve this, we selected only pollsters with numeric grade above 2.0, using data collected from November 15, 2022, to October 27, 2024.
 
-From the row data, we only preserved the main useful variables:
+
+## Measurement
+	
+In this section, we will describe the process of converting raw poll data into a structured dataset for analysis. In this process, because this study focuses on studying the changes in Trump's support rate and predicting whether Trump can be successfully elected, all data collection and analysis will be carried out around Trump. Raw poll data comes from actual polls conducted by various organizations across the United States. Each pollster uses different methods, such as online panels and Live Phone surveys, to record whether the public supports Donald Trump. After the poll results are collected, they are aggregated into comprehensive datasets, such as the dataset provided by FiveThirtyEight [@fivethirtyeight2024]. In this dataset, key factors include the start and end dates of the poll, the identity of the pollster, the state, the pollscore, and the numeric grade, which is an indicator to evaluate the reliability of each poll. These parameters will be explained in detail below. This structured dataset allows us to analyze Trump's support patterns and trends over time and across regions. We will explore how these factors affect public sentiment and predict the likelihood of Trump becoming the next US president.
+
 
 - **Support Percentage (pct):** The percentage of respondents supporting each candidate, acting as the primary outcome variable for analysis.
 
@@ -78,6 +82,8 @@ From the row data, we only preserved the main useful variables:
 
 - **Pollscore:** A measure of the pollster's reliability, with lower (often negative) values indicating higher predictive accuracy.
 
+- **Numeric Grade:** A measure of the credibility or quality of the poll. To ensure higher credibility of the results, we removed all the original poll data with numeric grade lower than 2.0.
+
 - **Sample Size:** The total number of respondents in each poll, which impacts the poll’s statistical precision and margin of error.
 
 - **Candidate Name:** The name of the candidate evaluated in the poll, allowing for candidate-specific analysis.
@@ -85,14 +91,6 @@ From the row data, we only preserved the main useful variables:
 - **Start Date:** The starting date of the poll, aiding in temporal alignment for trend analyses.
 
 - **End Date:** The completion date of the poll, aiding in temporal alignment for trend analyses.
-
-## Measurement
-	
-In this section, we describe the process of transforming raw polling data into a structured dataset for analysis. The data is sourced from actual polls conducted by various organizations across the United States, each using different methodologies to record public support for Donald Trump. This diversity of sources enhances the range and credibility of the data.
-
-Once collected, the poll results are aggregated into comprehensive datasets, such as those provided by FiveThirtyEight [@fivethirtyeight2024]. Key variables include the poll’s end date, pollster identity, state, and a quality score assessing each poll's reliability. These variables play a role in shaping Trump’s approval ratings and can improve our ability to predict his likelihood of becoming the next U.S. President.
-
-This structured dataset enables us to analyze patterns and trends in Trump’s support over time and across regions, allowing us to explore how factors like state, poll score, and pollster influence public sentiment. By grounding our analysis in actual polling data, we ensure greater credibility in our results, ultimately supporting more accurate predictions for the upcoming 2024 U.S. election.
 
 ## Outcome variables
 
@@ -135,11 +133,11 @@ ggplot(analysis_data_1, aes(x = pct)) +
 
 ### State
 
-In [@fig-state] we looked at how each state polled in the popular vote. What we found for each state had to do with its party affiliation. the REP partisan states would have a higher Trump vote, above 50 per cent. then there are the swing states where the number of votes generally swings around the 50 mark. And states that are predominantly DEM partisan will have much lower support for Trump generally below 50 percent
+In [@fig-state], we analyzed the distribution of Trump’s popular support rate across states. Trump’s support rate aligns closely with each state’s party preference: Republican states show high support for Trump, exceeding 50%, followed by swing states, where support typically hovers around 50%. In Democratic-leaning states, Trump’s support is significantly lower, generally below 50%. The "national" category in the chart represents data covering the entire country without specifying a particular state. Trump’s national support approaches but does not reach 50%.
 
 ```{r, fig.width=12, fig.height=7}
 #| label: fig-state
-#| fig-cap: Overview of election data in different states
+#| fig-cap: Overview of the Percentage Support of Trump Across Different States
 #| echo: false
 #| warning: false
 #| message: false
@@ -189,12 +187,12 @@ ggplot(analysis_data_2, aes(x = reorder(state, -pct, FUN = mean), y = pct)) +
         legend.title = element_text(size = 14, face = "bold"),  # Legend title size
         legend.text = element_text(size = 12)) +  # Legend text size
   ylim(10, 75)
+
 ```
 
 ### Numeric Grade
 
-The [@fig-method] illustrates the relationship between numeric grade and pct, showing how variations in pollster quality scores (numeric grade) relate to the support percentage (pct) for the candidate. Each point represents a poll, with its numeric grade on the x axis and support percentage on the y axis.
-The overall trend, indicated by the linear trend line, suggests positive correlation. This may indicate that polls from higher-rated pollsters (with a higher numeric_grade) show higher support percentages. However, the spread of points also highlights variability, suggesting that while numeric grade may have some influence on pct, other factors likely contribute to fluctuations in support levels.
+In [@fig-method], we analyzed the relationship between numeric grade and Trump’s support rate. Each point in the chart represents a poll, with its numeric grade on the x-axis and Trump’s support rate on the y-axis. The nearly flat trend line suggests that numeric grade has no clear relationship with Trump’s support rate. However, this is a basic analysis and does not rule out the possibility that numeric grade could impact Trump’s support rate under different variable conditions.
 
 ```{r}
 #| label: fig-method
@@ -383,7 +381,7 @@ Incentives: Offer gift cards or other small incentives for participation, partic
 
 ## Data Validation
 
-To effectively reach our target population and capture a diverse range of perspectives, we will implement a multi-mode recruitment strategy tailored to different demographic groups and communication preferences. This approach includes online surveys using a Google Forms questionnaire, which will be widely distributed through social media, email lists, and community networks to maximize reach among individuals who frequently engage online. The user-friendly platform allows participants to complete the survey quickly and anonymously on any internet-enabled device. The survey can be accessed through the following link: https://forms.gle/oSbad52Vuw9Z9Wf46. Additionally, we will conduct live telephone interviews to include participants who may not be reachable through online channels, ensuring we capture responses from populations that might otherwise be underrepresented. To further engage younger demographics and individuals with limited internet access, we will implement SMS-based surveys, allowing participants to respond quickly via text. To encourage participation and improve response rates, small incentives such as digital gift cards will be offered, particularly for online respondents, with details communicated at the survey's start and awarded upon completion to ensure transparency. This comprehensive approach will enable us to gather a robust and representative dataset, providing valuable insights into the preferences and priorities of voters across multiple demographics.
+To effectively reach our target population and capture a diverse range of perspectives, we will implement a multi-mode recruitment strategy tailored to different demographic groups and communication preferences. This approach includes online surveys using a Google Forms questionnaire, which will be widely distributed through social media, email lists, and community networks to maximize reach among individuals who frequently engage online. The user-friendly platform allows participants to complete the survey quickly and anonymously on any internet-enabled device. The survey can be accessed through the following link: [https://forms.gle/oSbad52Vuw9Z9Wf46](https://forms.gle/oSbad52Vuw9Z9Wf46). Additionally, we will conduct live telephone interviews to include participants who may not be reachable through online channels, ensuring we capture responses from populations that might otherwise be underrepresented. To further engage younger demographics and individuals with limited internet access, we will implement SMS-based surveys, allowing participants to respond quickly via text. To encourage participation and improve response rates, small incentives such as digital gift cards will be offered, particularly for online respondents, with details communicated at the survey's start and awarded upon completion to ensure transparency. This comprehensive approach will enable us to gather a robust and representative dataset, providing valuable insights into the preferences and priorities of voters across multiple demographics.
 
 ## Poll Aggregation and Modeling
 
