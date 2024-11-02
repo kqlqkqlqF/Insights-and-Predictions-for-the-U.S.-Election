@@ -1,6 +1,6 @@
 ---
-title: "My title"
-subtitle: "My subtitle if needed"
+title: "Predictive Modeling for Forcasting the 2024 US Presidential Election"
+subtitle: "Trump's Narrow Victory Over Harris By Less than One Percent of the Supporting Rate"
 author: 
   - First author
   - Another author
@@ -62,15 +62,13 @@ Telegraphing paragraph: The remainder of this paper is structured as follows. @s
 
 In this analysis, we used R [@citeR] to investigate polling data on public sentiment leading up to the election. Our dataset, sourced from FiveThirtyEight [@fivethirtyeight2024], provides a detailed snapshot of shifting public opinion over time. We examined key factors influencing support percentages, including poll timing, pollster characteristics, and state-specific trends.
 
-Several R packages were instrumental in facilitating data manipulation, modeling, and visualization. Tidyverse served as the foundation for organizing and efficiently analyzing the data, seamlessly integrating multiple analytical tasks [@thereferencecanbewhatever]. The Here package simplified file path management, ensuring smooth data access across systems [@here]. We utilized Janitor for comprehensive data cleaning, which helped us identify and correct inconsistencies [@janitor], while Lubridate supported the handling of time-related variables [@lubridate]. Finally, Arrow enabled fast, memory-efficient access to large datasets, a crucial asset when working with extensive polling data [@citearrow]. Our codebase and workflow adhered closely to best practices, as outlined in @tellingstories.
+Several R packages were instrumental in facilitating data manipulation, modeling, and visualization. Tidyverse served as the foundation for organizing and efficiently analyzing the data, seamlessly integrating multiple analytical tasks [@thereferencecanbewhatever]. The Here package simplified file path management, ensuring smooth data access across systems [@here]. We utilized Janitor for comprehensive data cleaning, which helped us identify and correct inconsistencies [@janitor], while Lubridate supported the handling of time-related variables [@lubridate]. Finally, Arrow enabled fast, memory-efficient access to large datasets, a crucial asset when working with extensive polling data [@citearrow]. Our codebase and workflow adhered closely to best practices, as outlined in @tellingstories. Data analysis was enhanced by various packages. The tidyverse [@tidy] suite facilitated efficient data manipulation and visualization, while ggplot2 [@gg2] allowed for compelling visualizations. We used ggmap [@ggmap], built on ggplot2, to generate a map of shelter distribution in Toronto via the Google API. We utilized kableExtra [@kable] for visually appealing and customizable tables. For Bayesian analysis, we employed rstanarm [@rstanarm], providing an elegant interface to Stan for estimating data relationships within a Bayesian framework. Report generation was managed with knitr [@knitr], enabling seamless integration of R code into our document. Other essential packages included tibble [@tibble], stringr [@stringr] contributing to various aspects of data analysis, from manipulation to quality assurance.
 
 Our group focused on Trump’s approval ratings, aiming to ensure the credibility of the data. To achieve this, we selected only pollsters with numeric grade above 2.0, using data collected from November 15, 2022, to October 27, 2024.
 
-
 ## Measurement
 	
-In this section, we will describe the process of converting raw poll data into a structured dataset for analysis. In this process, because this study focuses on studying the changes in Trump's support rate and predicting whether Trump can be successfully elected, all data collection and analysis will be carried out around Trump. Raw poll data comes from actual polls conducted by various organizations across the United States. Each pollster uses different methods, such as online panels and Live Phone surveys, to record whether the public supports Donald Trump. After the poll results are collected, they are aggregated into comprehensive datasets, such as the dataset provided by FiveThirtyEight [@fivethirtyeight2024]. In this dataset, key factors include the start and end dates of the poll, the identity of the pollster, the state, the pollscore, and the numeric grade, which is an indicator to evaluate the reliability of each poll. These parameters will be explained in detail below. This structured dataset allows us to analyze Trump's support patterns and trends over time and across regions. We will explore how these factors affect public sentiment and predict the likelihood of Trump becoming the next US president.
-
+In this section, we will describe the process of converting raw poll data into a structured dataset for analysis. In this process, because this study focuses on studying the changes in Trump's support rate and predicting whether Trump can be successfully elected, all data collection and analysis will be carried out around Trump and his main opponent Harris. Raw poll data comes from actual polls conducted by various organizations across the United States. Each pollster uses different methods, such as online panels and Live Phone surveys, to record whether the public supports Donald Trump. After the poll results are collected, they are aggregated into comprehensive datasets, such as the dataset provided by FiveThirtyEight [@fivethirtyeight2024]. In this dataset, key factors include the start and end dates of the poll, the identity of the pollster, the state, the pollscore, and the numeric grade, which is an indicator to evaluate the reliability of each poll. These parameters will be explained in detail below. This structured dataset allows us to analyze Trump's support patterns and trends over time and across regions. We will explore how these factors affect public sentiment and predict the likelihood of Trump becoming the next US president.
 
 - **Support Percentage (pct):** The percentage of respondents supporting each candidate, acting as the primary outcome variable for analysis.
 
@@ -80,7 +78,7 @@ In this section, we will describe the process of converting raw poll data into a
 
 - **Pollster:**The organization that conducted the poll, providing insight into the methodological quality.
 
-- **Pollscore:** A measure of the pollster's reliability, with lower (often negative) values indicating higher predictive accuracy.
+- **Poll Score:** A measure of the pollster's reliability, with lower (often negative) values indicating higher predictive accuracy.
 
 - **Numeric Grade:** A measure of the credibility or quality of the poll. To ensure higher credibility of the results, we removed all the original poll data with numeric grade lower than 2.0.
 
@@ -111,25 +109,26 @@ ggplot(analysis_data_1, aes(x = pct)) +
   geom_histogram(binwidth = 1, fill = "#4575B4", color = "navy") +
   labs(x = "Percentage Support (%)",
        y = "Frequency") +
-  theme_bw()
-
+  theme_bw() +
+  theme(axis.title.x = element_text(face = "bold"),  # Make x-axis title bold
+        axis.title.y = element_text(face = "bold"))  # Make y-axis title bold
 ```
 
 ## Predictor variables
 
 ### Summary of Predictor Variables
 
-- **Numeric Grade:** A numeric rating from 0.0 to 3.0 indicating each pollster’s reliability.
-
 - **State:** The U.S. state where the poll was conducted, if applicable.
+
+- **Numeric Grade:** A numeric rating from 0.0 to 3.0 indicating each pollster’s reliability.
 
 - **Sample Size:** The total number of respondents participating in the poll.
 
-- **Pollscore:** A quantitative measure of the pollster’s reliability, where lower values suggest higher predictive accuracy.
+- **Poll Score:** A quantitative measure of the pollster’s reliability, where lower values suggest higher predictive accuracy.
 
 - **Recency Weight:** A metric used to assess the relevance of polling data based on how close the polling dates are to an upcoming election. It is calculated by evaluating the number of days until the election from both the start and end dates of the poll, normalizing these values against the maximum days from other polls. The resulting weight gives more importance to more recent polling data, reflecting its greater influence on understanding current public sentiment..
 
-- **Candidate Name:** Indicating the corresponding presidential candidate.
+- **Candidate Name:** Indicate the corresponding presidential candidate. Trump was represented by 0, while Harris was represented by 1.
 
 ### State
 
@@ -220,7 +219,7 @@ ggplot(analysis_data_1, aes(x = numeric_grade, y = pct)) +
 
 ### Sample Size
 
-We examine the relationship between sample size and support percentage in [@fig-sample-size]. It reveals that while larger samples may increase the stability of the estimates, they don’t necessarily correlate with higher or lower support percentages.We can also find that the larger the SAMPLE SIZE, the lower Trump's PCT is.
+In [@fig-sample-size], we examined the relationship between sample size and Trump’s support rate. The results show a slight downward trend in Trump’s support as sample size increases. However, since most data points are concentrated in the 0–4000 range, with fewer data points above 4000, this may not accurately reflect the true relationship between sample size and support rate.
 
 ```{r}
 #| label: fig-sample-size
@@ -253,9 +252,9 @@ ggplot(filtered_data, aes(x = sample_size, y = pct)) +
 
 ```
 
-### Pollscore
+### Poll Score
 
-By analyzing [@fig-Pollscore], the relationship between pollscore and support percentage reveals that while higher poll scores may suggest greater reliability, they don't directly translate to variations in candidate support.We can see that although there's a slight trend, it won't effect our pct.
+Analysis of [@fig-Pollscore] shows no clear proportional or inverse relationship between poll scores and Trump’s support rate. This suggests that while a higher poll score may indicate greater reliability, it does not directly translate into changes in candidate support. This also supports the data's credibility, as Trump’s support rate remains consistent regardless of pollster ratings.
 
 ```{r}
 #| label: fig-Pollscore
@@ -285,7 +284,7 @@ ggplot(analysis_data_1, aes(x = pollscore, y = pct)) +
 
 ### Recency Weight
 
-This chart shows the relationship between how recent a poll is and the support percentage. It suggests that while newer polls might slightly impact the support levels, overall public opinion seems relatively stable. 
+[@fig-recency] shows the relationship between poll recency and Trump’s support rate. It indicates a slight upward trend in Trump’s support as polls get closer to Election Day, though the increase is not significant.
 
 ```{r}
 #| label: fig-recency
@@ -312,13 +311,11 @@ ggplot(analysis_data_1, aes(x = recency_weight, y = pct)) +
   ylim(0, 100)  # Adjust y-axis limits if needed
 ```
 
-
 ### Candidate Name
 
-To keep the prediction fair to trump and Harris, we predict their supporting percentage with the same model, and thats the reason why 
+To predict Trump's probability of winning the election, we will create a model containing the aforementioned predictor variables to forecast the support rates for both Trump and his main opponent, Harris. To ensure fairness in the results, we will use the same model to predict the support rates for Trump and Harris. Thus, we have created a variable called candidate_name, where Trump is represented by a value of 0 and Harris by a value of 1.
 
-
-# Discussion
+# Discussion {#sec-discussion}
 
 
 
@@ -386,8 +383,6 @@ To effectively reach our target population and capture a diverse range of perspe
 ## Poll Aggregation and Modeling
 
 Poll results will be aggregated using statistical methods to identify trends and analyze historical voting patterns. We will implement a weighted analysis to ensure demographic representation, applying specific weights based on factors such as age, gender, race, and education level, as well as state significance to reflect regional variations in voter behavior. Predictive analytics will primarily involve logistic regression to model voting preferences and forecast election outcomes, supplemented by time-series analysis to track changes in voter sentiment over the campaign period. To enhance our findings, we will combine our data with reputable sources like FiveThirtyEight, utilizing their aggregation techniques to enrich our analysis with broader insights. 
-
-
 
 \newpage
 
