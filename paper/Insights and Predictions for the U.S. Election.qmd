@@ -4,7 +4,7 @@ subtitle: "My subtitle if needed"
 author: 
   - First author
   - Another author
-thanks: "Code and data are available at: [https://github.com/RohanAlexander/starter_folder](https://github.com/RohanAlexander/starter_folder)."
+thanks: "Code and data are available at: https://github.com/kqlqkqlqF/Insights-and-Predictions-for-the-U.S.-Election.git."
 date: today
 date-format: long
 abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
@@ -22,7 +22,7 @@ bibliography: references.bib
 # Purpose: Writing the paper for visualizing the data in "About Daily Shelter & Overnight Service Occupancy & Capacity" dataset
 
 # Author: Yiyi Feng
-# Date: 26 September 2024
+# Date: 1 November 2024
 # Contact: yiyi.feng@mail.utoronto.ca
 
 ####Workspace setup ####
@@ -34,7 +34,8 @@ library(janitor)
 library(tidyverse)
 library(here)
 library(modelsummary)
-analysis_data <- read_parquet(here::here("data/02-analysis_data/analysis_data.parquet"))
+
+analysis_data_1 <- read_parquet(here::here("data/02-analysis_data/analysis_data_1.parquet"))
 ```
 
 
@@ -61,11 +62,11 @@ Telegraphing paragraph: The remainder of this paper is structured as follows. @s
 
 In this analysis, we used R [@citeR] to investigate polling data on public sentiment leading up to the election. Our dataset, sourced from FiveThirtyEight [@fivethirtyeight2024], provides a detailed snapshot of shifting public opinion over time. We examined key factors influencing support percentages, including poll timing, pollster characteristics, and state-specific trends.
 
-Several R packages were instrumental in facilitating data manipulation, modeling, and visualization. Tidyverse served as the foundation for organizing and efficiently analyzing the data, seamlessly integrating multiple analytical tasks [@thereferencecanbewhatever]. The Here package simplified file path management, ensuring smooth data access across systems [@citehere]. We utilized Janitor for comprehensive data cleaning, which helped us identify and correct inconsistencies [@citejanitor], while Lubridate supported the handling of time-related variables [@citelubridate]. Finally, Arrow enabled fast, memory-efficient access to large datasets, a crucial asset when working with extensive polling data [@citearrow]. Our codebase and workflow adhered closely to best practices, as outlined in @tellingstories.
+Several R packages were instrumental in facilitating data manipulation, modeling, and visualization. Tidyverse served as the foundation for organizing and efficiently analyzing the data, seamlessly integrating multiple analytical tasks [@thereferencecanbewhatever]. The Here package simplified file path management, ensuring smooth data access across systems [@here]. We utilized Janitor for comprehensive data cleaning, which helped us identify and correct inconsistencies [@janitor], while Lubridate supported the handling of time-related variables [@lubridate]. Finally, Arrow enabled fast, memory-efficient access to large datasets, a crucial asset when working with extensive polling data [@citearrow]. Our codebase and workflow adhered closely to best practices, as outlined in @tellingstories.
 
 Our group focused on Trump’s approval ratings, aiming to ensure the credibility of the data. To achieve this, we selected only pollsters with numeric grade above 2.0, using data collected from November 15, 2022, to October 27, 2024.
 
-The main useful variables that the data contains are:
+From the row data, we only preserved the main useful variables:
 
 - **Support Percentage (pct):** The percentage of respondents supporting each candidate, acting as the primary outcome variable for analysis.
 
@@ -80,6 +81,8 @@ The main useful variables that the data contains are:
 - **Sample Size:** The total number of respondents in each poll, which impacts the poll’s statistical precision and margin of error.
 
 - **Candidate Name:** The name of the candidate evaluated in the poll, allowing for candidate-specific analysis.
+
+- **Start Date:** The starting date of the poll, aiding in temporal alignment for trend analyses.
 
 - **End Date:** The completion date of the poll, aiding in temporal alignment for trend analyses.
 
@@ -106,9 +109,9 @@ The lower frequency of approval ratings below 30% and above 60% indicates that t
 #| warning: false
 #| message: false
 
-ggplot(analysis_data, aes(x = pct)) +
-  geom_histogram(binwidth = 1, fill = "skyblue", color = "navy") +
-  labs(x = "Percentage support",
+ggplot(analysis_data_1, aes(x = pct)) +
+  geom_histogram(binwidth = 1, fill = "#4575B4", color = "navy") +
+  labs(x = "Percentage Support (%)",
        y = "Frequency") +
   theme_bw()
 
@@ -116,79 +119,208 @@ ggplot(analysis_data, aes(x = pct)) +
 
 ## Predictor variables
 
-### Summarize of Predictor Variables
+### Summary of Predictor Variables
 
-Our predictor variables include candidate name, sample size, pollscore, numeric grade, recency weight, and state. We intend to leverage these variables to predict Trump’s likelihood of being elected.
+- **Numeric Grade:** A numeric rating from 0.0 to 3.0 indicating each pollster’s reliability.
 
-- **Numeric Grade:** A numeric rating indicating each pollster’s reliability.
-
-- **State:** The US state where the poll was conducted, if applicable.
+- **State:** The U.S. state where the poll was conducted, if applicable.
 
 - **Sample Size:** The total number of respondents participating in the poll.
 
-- **Pollscore:** A quantitative measure of the pollster’s reliability, where lower (negative) values suggest higher predictive accuracy.
+- **Pollscore:** A quantitative measure of the pollster’s reliability, where lower values suggest higher predictive accuracy.
 
 - **Recency Weight:** A metric used to assess the relevance of polling data based on how close the polling dates are to an upcoming election. It is calculated by evaluating the number of days until the election from both the start and end dates of the poll, normalizing these values against the maximum days from other polls. The resulting weight gives more importance to more recent polling data, reflecting its greater influence on understanding current public sentiment..
 
-- **Candidate Name:** Indicates how recent each poll is, calculated based on the time difference from the most recent poll.
+- **Candidate Name:** Indicating the corresponding presidential candidate.
 
 ### State
 
-Here we looked at how each state polled in the popular vote. What we found for each state had to do with its party affiliation. the REP partisan states would have a higher Trump vote, above 50 per cent. then there are the swing states where the number of votes generally swings around the 50 mark. And states that are predominantly DEM partisan will have much lower support for Trump generally below 50 per cent
+In [@fig-state] we looked at how each state polled in the popular vote. What we found for each state had to do with its party affiliation. the REP partisan states would have a higher Trump vote, above 50 per cent. then there are the swing states where the number of votes generally swings around the 50 mark. And states that are predominantly DEM partisan will have much lower support for Trump generally below 50 percent
 
-```{r}
+```{r, fig.width=12, fig.height=7}
 #| label: fig-state
 #| fig-cap: Overview of election data in different states
 #| echo: false
 #| warning: false
 #| message: false
 
+# Define party preference for states
+democratic_states <- c(
+  "California", "New York", "Illinois", "New Jersey", "Massachusetts",
+  "Maryland", "Washington", "Oregon", "Connecticut", "Hawaii",
+  "Rhode Island", "Vermont", "Delaware", "New Mexico", "Colorado",
+  "Virginia", "Maine", "Maine CD-1", "Maine CD-2", "Minnesota"
+) # Add other Democratic states
 
-ggplot(analysis_data, aes(x = reorder(state, -pct, FUN = mean), y = pct)) +
-  geom_boxplot(fill = "skyblue", color = "black", outlier.color = "red", outlier.shape = 16) +
-  labs(x = "State", y = "Percentage Support", title = "Support Distribution by State") +
+republican_states <- c(
+  "Texas", "Alabama", "Mississippi", "Oklahoma", "Kentucky",
+  "Tennessee", "West Virginia", "South Carolina", "Louisiana",
+  "Arkansas", "Missouri", "Indiana", "Kansas", "Nebraska", "Nebraska CD-2",
+  "South Dakota", "North Dakota", "Idaho", "Montana", "Utah", "Wyoming", "Alaska"
+)  # Add other Republican states
+
+swing_states <- c(
+  "Florida", "Ohio", "Iowa", "Pennsylvania", "Michigan", "Wisconsin",
+  "North Carolina", "Arizona", "Georgia", "Nevada", "New Hampshire"
+)      # Add other swing states
+
+# Add a new column in your data for color coding based on party preference
+analysis_data_2 <- analysis_data_1 %>%
+  mutate(state_color = case_when(
+    state %in% democratic_states ~ "Democratic",
+    state %in% republican_states ~ "Republican",
+    state %in% swing_states ~ "Swing State",
+    TRUE ~ "National"  # Default label if any state is unclassified
+  ))
+
+# Create the plot
+ggplot(analysis_data_2, aes(x = reorder(state, -pct, FUN = mean), y = pct)) +
+  geom_boxplot(aes(fill = state_color), color = "black", outlier.color = "darkblue", outlier.shape = 16) +
+  scale_fill_manual(values = c("Democratic" = "#4575B4",   # Democratic states
+                                "Republican" = "#D73027",   # Republican states
+                                "Swing State" = "white",     # Swing states
+                                "National" = "gray")) +      # National
+  labs(x = "State", y = "Percentage Support", fill = "State Type") +  # Add a legend title
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
+  theme(axis.text.x = element_text(angle = 90, hjust = 1,size = 14),  # Change angle to 90 for vertical labels
+        axis.text.y = element_text(size = 14),  # Increase y-axis label size
+        axis.title.x = element_text(size = 16, face = "bold"),  # Increase x-axis label size
+        axis.title.y = element_text(size = 16, face = "bold"),  # Increase y-axis label size
+        legend.title = element_text(size = 14, face = "bold"),  # Legend title size
+        legend.text = element_text(size = 12)) +  # Legend text size
+  ylim(10, 75)
 ```
 
 ### Numeric Grade
 
+The [@fig-method] illustrates the relationship between numeric grade and pct, showing how variations in pollster quality scores (numeric grade) relate to the support percentage (pct) for the candidate. Each point represents a poll, with its numeric grade on the x axis and support percentage on the y axis.
+The overall trend, indicated by the linear trend line, suggests positive correlation. This may indicate that polls from higher-rated pollsters (with a higher numeric_grade) show higher support percentages. However, the spread of points also highlights variability, suggesting that while numeric grade may have some influence on pct, other factors likely contribute to fluctuations in support levels.
+
 ```{r}
 #| label: fig-method
-#| fig-cap: Percentage Support of Trump Under Different Voting Methods
+#| fig-cap: Relationship between Numeric Grade and Support Percentage of Trump
 #| echo: false
 #| warning: false
 #| message: false
 
-
-
+ggplot(analysis_data_1, aes(x = numeric_grade, y = pct)) +
+  geom_point(alpha = 0.5, color = "black", size = 3) +  # Adjust point color and size
+  geom_smooth(method = "lm", se = FALSE, color = "#4575B4", size = 1.2) +  # Trend line with color and size
+  labs(x = "Numeric Grade", 
+       y = "Support Percentage (%)") +
+  theme_minimal(base_size = 15) +  # Set base size for text
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 13),  # Center and bold title
+        axis.title.x = element_text(size = 11, face = "bold"),  # Bold x-axis title
+        axis.title.y = element_text(size = 11, face = "bold"),  # Bold y-axis title
+        axis.text.x = element_text(size = 11),  # Increase x-axis text size
+        axis.text.y = element_text(size = 11),  # Increase y-axis text size
+        panel.grid.major = element_line(color = "lightgray"),  # Light grid lines for better visibility
+        panel.grid.minor = element_blank()) +  # Set background color
+  xlim(min(analysis_data_1$numeric_grade, na.rm = TRUE), max(analysis_data_1$numeric_grade, na.rm = TRUE)) +  # Set x-axis limits
+  ylim(0, 100)  # Adjust y-axis limits if needed
 ```
-
 
 ### Sample Size
 
+We examine the relationship between sample size and support percentage in [@fig-sample-size]. It reveals that while larger samples may increase the stability of the estimates, they don’t necessarily correlate with higher or lower support percentages.We can also find that the larger the SAMPLE SIZE, the lower Trump's PCT is.
+
 ```{r}
-#| label: fig-method-pct
-#| fig-cap: method-pct
+#| label: fig-sample-size
+#| fig-cap: Relationship between Sample Size and Support Percentage for Trump
 #| echo: false
 #| warning: false
 #| message: false
 # Convert pct column to numeric if it is not already
 
+# Filter out rows with sample_size greater than 15000
+filtered_data <- analysis_data_1 %>%
+  filter(sample_size <= 15000)
+
+# Plot the relationship between sample_size and pct with enhanced aesthetics
+ggplot(filtered_data, aes(x = sample_size, y = pct)) +
+  geom_point(alpha = 0.5, color = "black", size = 3) +  # Adjust point color and size
+  geom_smooth(method = "lm", se = FALSE, color = "#4575B4", size = 1.2) +  # Trend line with color and size
+  labs(x = "Sample Size", 
+       y = "Support Percentage (%)") +
+  theme_minimal(base_size = 15) +  # Set base size for text
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 18),  # Center and bold title
+        axis.title.x = element_text(size = 16, face = "bold"),  # Bold x-axis title
+        axis.title.y = element_text(size = 16, face = "bold"),  # Bold y-axis title
+        axis.text.x = element_text(size = 14),  # Increase x-axis text size
+        axis.text.y = element_text(size = 14),  # Increase y-axis text size
+        panel.grid.major = element_line(color = "lightgray"),  # Light grid lines for better visibility
+        panel.grid.minor = element_blank()) +  # Set background color
+  xlim(min(filtered_data$sample_size, na.rm = TRUE), max(filtered_data$sample_size, na.rm = TRUE)) +  # Set x-axis limits
+  ylim(0, 100)  # Adjust y-axis limits if needed
 
 ```
 
 ### Pollscore
 
+By analyzing [@fig-Pollscore], the relationship between pollscore and support percentage reveals that while higher poll scores may suggest greater reliability, they don't directly translate to variations in candidate support.We can see that although there's a slight trend, it won't effect our pct.
+
+```{r}
+#| label: fig-Pollscore
+#| fig-cap: Relationship between Pollscore and Support Percentage of Trump
+#| echo: false
+#| warning: false
+#| message: false
+
+# Plot the relationship between pollscore and pct
+# Plot the relationship between pollscore and pct with enhanced aesthetics
+ggplot(analysis_data_1, aes(x = pollscore, y = pct)) +
+  geom_point(alpha = 0.5, color = "black", size = 3) +  # Adjust point color and size
+  geom_smooth(method = "lm", se = FALSE, color = "#4575B4", size = 1.2) +  # Trend line with color and size
+  labs(x = "Pollscore", 
+       y = "Support Percentage (%)") +
+  theme_minimal(base_size = 15) +  # Set base size for text
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 18),  # Center and bold title
+        axis.title.x = element_text(size = 16, face = "bold"),  # Bold x-axis title
+        axis.title.y = element_text(size = 16, face = "bold"),  # Bold y-axis title
+        axis.text.x = element_text(size = 14),  # Increase x-axis text size
+        axis.text.y = element_text(size = 14),  # Increase y-axis text size
+        panel.grid.major = element_line(color = "lightgray"),  # Light grid lines for better visibility
+        panel.grid.minor = element_blank()) +  # Set background color
+  xlim(min(analysis_data_1$pollscore, na.rm = TRUE), max(analysis_data_1$pollscore, na.rm = TRUE)) +  # Set x-axis limits
+  ylim(0, 100)  # Adjust y-axis limits if needed
+```
 
 ### Recency Weight
+
+This chart shows the relationship between how recent a poll is and the support percentage. It suggests that while newer polls might slightly impact the support levels, overall public opinion seems relatively stable. 
+
+```{r}
+#| label: fig-recency
+#| fig-cap: Relationship between Recency Weight and Support Percentage of Trump
+#| echo: false
+#| warning: false
+#| message: false
+
+# Plot the relationship between recency_weight and pct with enhanced aesthetics
+ggplot(analysis_data_1, aes(x = recency_weight, y = pct)) +
+  geom_point(alpha = 0.5, color = "black", size = 3) +  # Adjust point color and size
+  geom_smooth(method = "lm", se = FALSE, color = "#4575B4", size = 1.2) +  # Trend line with color and size
+  labs(x = "Recency Weight", 
+       y = "Support Percentage (%)") +
+  theme_minimal(base_size = 15) +  # Set base size for text
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 18),  # Center and bold title
+        axis.title.x = element_text(size = 16, face = "bold"),  # Bold x-axis title
+        axis.title.y = element_text(size = 16, face = "bold"),  # Bold y-axis title
+        axis.text.x = element_text(size = 14),  # Increase x-axis text size
+        axis.text.y = element_text(size = 14),  # Increase y-axis text size
+        panel.grid.major = element_line(color = "lightgray"),  # Light grid lines for better visibility
+        panel.grid.minor = element_blank()) +  # Set background color
+  xlim(min(analysis_data_1$recency_weight, na.rm = TRUE), max(analysis_data_1$recency_weight, na.rm = TRUE)) +  # Set x-axis limits
+  ylim(0, 100)  # Adjust y-axis limits if needed
+```
 
 
 ### Candidate Name
 
+To keep the prediction fair to trump and Harris, we predict their supporting percentage with the same model, and thats the reason why 
 
-## Discussion
+
+# Discussion
 
 
 
