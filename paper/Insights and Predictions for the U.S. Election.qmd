@@ -60,7 +60,7 @@ Our estimand is the probability of Donald Trump winning the 2024 U.S. presidenti
 Results paragraph------------------------------
 
 
-The remainder of this paper is structured as follows: @sec-data provides an overview of the dataset, detail of the parameters , outcome and predictor variables, and the packages used during processing. @sec-model explains the modeling approach,  best model selection, justifying the choice of predictors and outlining the methods used to forecast support for Trump and Harris. @sec-results presents the findings, including a summary of the predicted support rate for Trump, a comparison of the predicted support rates for Trump and Harris, and a breakdown of their support rates in each state. In @sec-discussion, we discuss the implications of these results, limitations of our analysis, and potential avenues for future research. Additional methodological details and diagnostics are included in the appendix.
+The remainder of this paper is structured as follows: [@sec-data] provides an overview of the dataset, detail of the parameters , outcome and predictor variables, and the packages used during processing. [@sec-model] explains the modeling approach,  best model selection, justifying the choice of predictors and outlining the methods used to forecast support for Trump and Harris. [@sec-results] presents the findings, including a summary of the predicted support rate for Trump, a comparison of the predicted support rates for Trump and Harris, and a breakdown of their support rates in each state. In [@sec-discussion], we discuss the implications of these results, limitations of our analysis, and potential avenues for future research. Additional methodological details and diagnostics are included in the appendix.
 
 
 # Data {#sec-data}
@@ -323,7 +323,6 @@ ggplot(analysis_data, aes(x = recency_weight, y = pct)) +
 To predict Trump's probability of winning the election, we will create a model containing the aforementioned predictor variables to forecast the support rates for both Trump and his main opponent, Harris. To ensure fairness in the results, we will use the same model to predict the support rates for Trump and Harris. Thus, we have created a variable called candidate_name, where Trump is represented by a value of 0 and Harris by a value of 1.
 
 
-
 # Model {#sec-model}
 
 ```{r}
@@ -354,7 +353,9 @@ We chose to use "numeric grade" and "poll score" as variables instead of "pollst
 
 By systematically comparing model specifications that incorporate different variables, we aim to identify a model that strikes the right balance between predictive accuracy and generalizability, ultimately providing the most reliable forecast results.
 
+
 ## Model set-up
+
 We aim to model the percentage of support for a candidate based on factors such as candidate name, recency weight, state, sample size, pollscore, and numeric grade. This model includes interaction terms to capture how combinations of these factors jointly impact the support percentage, providing a more comprehensive understanding of the influences on candidate support.
 
 \
@@ -393,12 +394,12 @@ The model also includes several control variables, such as sample size, poll sco
 ## Model justification
 
 ```{r}
+#| label: tbl-model-compare
+#| tbl-cap: Model Summary with Included Variables and Interactions
 #| echo: false
 #| warning: false
 #| message: false
-#| label: tbl-model-compare
-#| tbl-cap: "Model Summary with Included Variables and Interactions" 
-#| 
+
 # Extract summary statistics and add variables included in each model
 model_summary <- tibble(
   Model = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5"),
@@ -430,13 +431,13 @@ model_summary <- tibble(
 
 # Display the table using kable
 model_summary %>%
-  kable(caption = "Model Summary with Included Variables and Interactions", digits = 5, escape = FALSE) %>%
+  kable(digits = 5, escape = FALSE) %>%
   kable_styling(full_width = FALSE) %>%
   column_spec(2, width = "8em")
 
 ```
 
-@tbl-model-compare summarizes the performance metrics for five models, each with progressively more variables and interactions.
+The [@tbl-model-compare] summarizes the performance metrics for five models, each with progressively more variables and interactions.
 
 Model 1, which includes only basic predictors (Sample Size, Poll Score, Numeric Grade, State), shows limited explanatory power, with an R² of 0.0526 and a high RMSE of 5.39274, indicating poor predictive accuracy. Adding Recency Weight in Model 2 slightly improves performance, increasing R² to 0.09461, but the RMSE remains high at 5.27184, suggesting only minor gains in prediction accuracy. Model 3 further incorporates Candidate Name, leading to a modest increase in R² to 0.09644, yet with minimal impact on RMSE (5.26649), indicating limited additional explanatory value from this variable alone.
 
@@ -445,12 +446,14 @@ The inclusion of an interaction between Candidate Name and State in Model 4 sign
 In conclusion, Model 5 is chosen as it captures complex interactions and provides the best balance of explanatory power and prediction accuracy, as evidenced by its highest R² and lowest RMSE.
 
 ## Optimizatio(It will not be mentioned in other sections)
+
 Given that we identified the limitations of linear models in handling interaction terms during our research, if we wish to investigate this issue further, we propose an optimized model—Random Forest. The reason we chose Random Forest over a linear model is because our data includes interaction terms. Random Forest excels at handling interactions and nonlinear relationships, as it can automatically identify and leverage these complex interactions through its decision tree structure, without requiring manual adjustments to the model structure. In contrast, linear models have limited capabilities for handling interactions, typically requiring manual specification and struggling to capture nonlinear effects. Given that our data contains multiple interactions, Random Forest can more flexibly adapt to the data structure, improving prediction accuracy and model stability.
 
 ```{r}
 #| include: false
 #| warning: false
 #| message: false
+
 tree_data <- cleaned_data
 
 tree_data$state_candidate_recency <- with(tree_data, interaction(state, candidate_name, recency_weight))
@@ -482,12 +485,15 @@ rf_model <- train(
 )
 ```
 
+
 ```{r}
-#| echo: false
-#| eval: true
 #| label: tbl-rf
 #| tbl-cap: "Predicted Average Percentages for Donald Trump vs. Kamala Harris by Random Forest"
+#| echo: false
 #| warning: false
+#| message: false
+
+
 tree_data <- tree_data[, !duplicated(names(tree_data))]
 
 tree_data <- tree_data %>%
@@ -504,7 +510,6 @@ results <- results %>%
 
 results %>%
   kable(
-    caption = "Predicted Percentage Vote for Donald Trump and Kamala Harris by Random Forest",
     col.names = c("Candidate Name", "Average Predicted Percentage", "Normalized Percentage"),
     digits = 2,
     booktabs = TRUE
@@ -512,17 +517,19 @@ results %>%
   kable_styling(latex_options = c("striped", "scale_down"))
 
 ```
-@tbl-rf are the prediction results obtained through Random Forest. Compared to a linear model, this result may be more accurate; however, in the overall study, this method is only provided and will not be the main subject of research.
+
+The [@tbl-rf] are the prediction results obtained through Random Forest. Compared to a linear model, this result may be more accurate; however, in the overall study, this method is only provided and will not be the main subject of research.
 
 
 # Result {#sec-results}
 
 ```{r}
+#| label: tbl-trump
+#| tbl-cap: "Summary Statistics of Predicted Support for Donald Trump"
 #| message: false
 #| echo: false
 #| warning: false
-#| label: tbl-trump
-#| tbl-cap: "Summary Statistics of Predicted Support for Donald Trump"
+
 
 cleaned_data <- cleaned_data %>%
   mutate(PredictedPercentage = predict(model5, newdata = cleaned_data))
@@ -539,7 +546,6 @@ trump_summary <- cleaned_data %>% filter(candidate_name == "Donald Trump") %>%
 
 trump_summary %>%
   kable(
-    caption = "Summary Statistics of Predicted Support for Donald Trump",
     col.names = c("Avg Support", "Median Support", "Min Support", "Max Support", "SD of Support", "Total Polls"),
     digits = 2,
     booktabs = TRUE
@@ -548,14 +554,15 @@ trump_summary %>%
 
 ```
 
-@tbl-trump shows the statistical information of the predicted support rate for Trump. The average support rate is 44.51%, with a median of 44.44%. The support rate ranges from a minimum of 28% to a maximum of 67.6%. The standard deviation of the support rate is 3.98, indicating some variability in the predictions. The data is derived from 2248 polls.
+The [@tbl-trump] shows the statistical information of the predicted support rate for Trump. The average support rate is 44.51%, with a median of 44.44%. The support rate ranges from a minimum of 28% to a maximum of 67.6%. The standard deviation of the support rate is 3.98, indicating some variability in the predictions. The data is derived from 2248 polls.
 
 ```{r}
-#| echo: false
-#| eval: true
 #| label: tbl-modelresults
 #| tbl-cap: "Predicted Average Vote Percentages for Donald Trump vs. Kamala Harris"
 #| warning: false
+#| echo: false
+#| eval: true
+
 results <- cleaned_data %>%
   group_by(candidate_name) %>%
   summarise(AveragePredictedPercentage = mean(PredictedPercentage))
@@ -567,22 +574,23 @@ results <- results %>%
 
 results %>%
   kable(
-    caption = "Predicted Percentage Vote for Donald Trump and Kamala Harris",
     col.names = c("Candidate Name", "Average Predicted Percentage", "Normalized Percentage"),
     digits = 2,
     booktabs = TRUE
   ) %>%
   kable_styling(latex_options = c("striped", "scale_down"))
+
 ```
 
-@tbl-modelresults presents the model's average predicted vote percentages for Donald Trump and Kamala Harris, along with their normalized percentages. According to the model's predictions, Donald Trump's average predicted vote percentage is 44.51%, while Kamala Harris's is 43.86%. The normalized percentages adjust these predicted values to relative proportions, with Donald Trump at 50.37% and Kamala Harris at 49.63%. These results show that although Donald Trump's average predicted vote percentage is slightly higher than Kamala Harris's, the support rates for both candidates are nearly equal, with Donald Trump holding a slight edge.
+The [@tbl-modelresults] presents the model's average predicted vote percentages for Donald Trump and Kamala Harris, along with their normalized percentages. According to the model's predictions, Donald Trump's average predicted vote percentage is 44.51%, while Kamala Harris's is 43.86%. The normalized percentages adjust these predicted values to relative proportions, with Donald Trump at 50.37% and Kamala Harris at 49.63%. These results show that although Donald Trump's average predicted vote percentage is slightly higher than Kamala Harris's, the support rates for both candidates are nearly equal, with Donald Trump holding a slight edge.
 
 ```{r}
-#| echo: false
-#| eval: true
 #| label: fig-map
 #| fig-cap: "Map of Projected Winner by State"
 #| warning: false
+#| echo: false
+#| eval: true
+
 trump_data <- cleaned_data %>%
   filter(candidate_name == "Donald Trump") %>%
   mutate(PredictedPercentage = predict(model5, newdata = .)) %>%
@@ -636,20 +644,19 @@ plot_usmap(data = state_results, regions = "states", values = "Winner", color = 
   )
 ```
 
-@fig-map is a map showing the projected winner in each state based on model predictions. Red indicates that Donald Trump is leading in predicted support in that state, blue indicates that Kamala Harris is leading, and gray signifies a lack of data for that state. Through this map, readers can intuitively observe the regional support patterns for both candidates across the nation. We can see that Donald Trump has an advantage in some states in the Midwest and South, while Kamala Harris performs better in parts of the Northeast and West. The following table presents this data in tabular form.
+The [@fig-map] is a map showing the projected winner in each state based on model predictions. Red indicates that Donald Trump is leading in predicted support in that state, blue indicates that Kamala Harris is leading, and gray signifies a lack of data for that state. Through this map, readers can intuitively observe the regional support patterns for both candidates across the nation. We can see that Donald Trump has an advantage in some states in the Midwest and South, while Kamala Harris performs better in parts of the Northeast and West. The following table presents this data in tabular form.
 
 ```{r}
-#| echo: false
-#| eval: true
 #| label: tbl-model-state
 #| tbl-cap: "Table of Projected Winner by State"
+#| echo: false
+#| eval: true
 #| warning: false
 
 # Display the results in a table
 state_results %>%
   arrange(state) %>%
   kable(
-    caption = "Predicted Average Vote Percentages and Projected Winner by State",
     col.names = c("State", "Donald Trump (%)", "Kamala Harris (%)", "Projected Winner"),
     digits = 2,
     booktabs = TRUE
@@ -658,12 +665,11 @@ state_results %>%
 
 ```
 
-@tbl-model-state provides a more detailed numerical representation of the predicted support percentages and projected winners for each state. @tbl-model-state complements @fig-map, allowing for a more specific view of Trump and Harris performance in each state.
+The [@tbl-model-state] provides a more detailed numerical representation of the predicted support percentages and projected winners for each state. @tbl-model-state complements @fig-map, allowing for a more specific view of Trump and Harris performance in each state.
 
 # Discussion {#sec-discussion}
 
 -----
-
 
 ## Limitation
 
