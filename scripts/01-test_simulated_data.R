@@ -1,20 +1,20 @@
 #### Preamble ####
-# Purpose: Tests the structure and validity of the simulated Australian 
+# Purpose: Tests the structure and validity of the simulated data
   #electoral divisions dataset.
-# Author: Rohan Alexander
-# Date: 26 September 2024
-# Contact: rohan.alexander@utoronto.ca
+# Author: Bo Tang, Yiyi Feng, Mingjing Zhan
+# Date: 2 November 2024
+# Contact: qinghe.tang@mail.utoronto.ca, yiyi.feng@mail.utoronto.ca, mingjin.zhan@mail.utoronto.ca
 # License: MIT
 # Pre-requisites: 
   # - The `tidyverse` package must be installed and loaded
   # - 00-simulate_data.R must have been run
-# Any other information needed? Make sure you are in the `starter_folder` rproj
+# Any other information needed? Make sure you are in the `Insights and Predictions for the U.S. Election` rproj
 
 
 #### Workspace setup ####
 library(tidyverse)
 
-analysis_data <- read_csv("data/00-simulated_data/simulated_data.csv")
+analysis_data <- read_parquet("data/00-simulated_data/simulated_data.parquet")
 
 # Test if the data was successfully loaded
 if (exists("analysis_data")) {
@@ -97,24 +97,10 @@ if  (all(analysis_data$numeric_grade >= 0 & analysis_data$numeric_grade <= 3)) {
   stop("Test Failed: They are not within the valid range")
 }
 
-# Check if numeric grade are in range [-2,0]
+# Check if pollscore are in range [-2,0]
 if (all(analysis_data$pollscore >= -2 & analysis_data$pollscore <= 0)){
   message("Test passed: They are valid pollscore")
 } else {
   stop("Test Failed: They are not within the valid range")
-}
-
-
-# Check if there are no empty strings in 'division', 'state', and 'party' columns
-if (all(analysis_data$division != "" & analysis_data$state != "" & analysis_data$party != "")) {
-  message("Test Passed: There are no empty strings in 'division', 'state', or 'party'.")
-} else {
-  stop("Test Failed: There are empty strings in one or more columns.")
-}
-
-# Check if the 'party' column has at least two unique values
-if (n_distinct(analysis_data$party) >= 2) {
-  message("Test Passed: The 'party' column contains at least two unique values.")
-} else {
-  stop("Test Failed: The 'party' column contains less than two unique values.")
-}
+} 
+  
