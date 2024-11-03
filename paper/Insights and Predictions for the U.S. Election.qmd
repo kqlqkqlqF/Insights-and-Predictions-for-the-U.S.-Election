@@ -8,7 +8,7 @@ author:
 thanks: "Code and data are available at: https://github.com/kqlqkqlqF/Insights-and-Predictions-for-the-U.S.-Election.git."
 date: today
 date-format: long
-abstract: "First sentence. Second sentence. Third sentence. Fourth sentence."
+abstract: "This paper presents a predictive framework for the 2024 U.S. Presidential Election, focusing on the race between Donald Trump and Kamala Harris. Our model forecasts a narrow victory for Trump, estimating his average support at 44.51% compared to Harris's 43.86%, with leads of Trump in key swing states. The analysis reveals that state andrecency are crucial for understanding voter support trends, reflecting the electoral system's winner-takes-all nature. This research enhances electoral forecasting by demonstrating how localized support influences national outcomes and underscores the need for improved polling methodologies."
 format: pdf
 number-sections: true
 bibliography: references.bib
@@ -53,12 +53,11 @@ analysis_data <- read_parquet(here::here("data/02-analysis_data/analysis_data.pa
 
 # Introduction
 
-The upcoming U.S. Presidential Election marks a pivotal moment in the nation’s political landscape, shaped by public sentiment, socio-economic factors, and the complexities of the electoral process. With Kamala Harris and Donald Trump competing for the presidency, accurately forecasting outcomes is increasingly vital. Polls serve as indicators of voter sentiment while also influencing campaign strategies and media narratives. Yet, challenges like sampling biases, methodological inconsistencies, and the gap between popular and electoral votes underscore the need for a refined forecasting model. This paper aims to develop a predictive framework that integrates national polling data and analyzes state-level dynamics, especially in key swing states that frequently decide election outcomes.
+The upcoming U.S. Presidential Election represents a critical juncture in the nation’s political landscape, influenced by public sentiment, socio-economic factors, and the complexities of the electoral process. With Kamala Harris and Donald Trump vying for the presidency, accurate outcome forecasting is increasingly essential. Polls not only gauge voter sentiment but also shape campaign strategies and media narratives. However, issues such as sampling biases, methodological inconsistencies, and the disconnect between popular and electoral votes highlight the need for a refined forecasting model. This paper aims to create a predictive framework that integrates national polling data while analyzing state-level dynamics, particularly in key swing states that often determine election outcomes.
 
-Our estimand is the probability of Donald Trump winning the 2024 U.S. presidential election, represented by voter support rate. To predict the support rates for both Trump and his main competitor, Harris, we developed linear models incorporating factors like candidate identity, poll recency, state, sample size, poll score, and poll quality, along with interactions between these variables. By identifying an optimal model among these, we aim to estimate how these factors and their combinations influence expected support, offering insights into each candidate's chances across regions and polling conditions. Modeling support rate, rather than direct winning probability, provides a continuous prediction that reflects variations by candidate, state, and poll timing.
+Our main focus is the probability of Donald Trump winning the 2024 U.S. presidential election, represented by voter support rates. To estimate support for both Trump and Harris, we developed linear models that account for factors such as candidate identity, poll recency, state, sample size, poll score, and poll quality, along with interactions among these variables. By identifying the optimal model, we aim to determine how these factors and their combinations influence expected support, providing insights into each candidate's chances across different regions and polling conditions. This approach models support rates rather than direct winning probabilities, allowing for a nuanced prediction that reflects variations by candidate, state, and recency.
 
-Results paragraph------------------------------
-
+Our model predicts that Donald Trump will win by a narrow margin, with an average support of 44.51% compared to Kamala Harris's 43.86%. Trump leads in six out of seven key swing states, suggesting that this localized support could enhance his overall chances despite only a slight national lead. Among the predictor variables analyzed, state and rencency are the most significant indicators of support trends, reflecting the "winner-takes-all" nature of the U.S. electoral system and the increasing accuracy of polling data as Election Day approaches.
 
 The remainder of this paper is structured as follows: [@sec-data] provides an overview of the dataset, detail of the parameters , outcome and predictor variables, and the packages used during processing. [@sec-model] explains the modeling approach,  best model selection, justifying the choice of predictors and outlining the methods used to forecast support for Trump and Harris. [@sec-results] presents the findings, including a summary of the predicted support rate for Trump, a comparison of the predicted support rates for Trump and Harris, and a breakdown of their support rates in each state. In [@sec-discussion], we discuss the implications of these results, limitations of our analysis, and potential avenues for future research. Additional methodological details and diagnostics are included in the appendix.
 
@@ -69,7 +68,7 @@ The remainder of this paper is structured as follows: [@sec-data] provides an ov
 
 In this analysis, we used R [@citeR] to investigate polling data on public sentiment leading up to the election. Our dataset, sourced from FiveThirtyEight [@fivethirtyeight2024], provides a detailed snapshot of shifting public opinion over time. We examined key factors influencing support percentages, including poll timing, pollster characteristics, and state-specific trends.
 
-Several R packages were instrumental in facilitating data manipulation, modeling, and visualization. Tidyverse served as the foundation for organizing and efficiently analyzing the data, seamlessly integrating multiple analytical tasks [@thereferencecanbewhatever]. The Here package simplified file path management, ensuring smooth data access across systems [@here]. We utilized Janitor for comprehensive data cleaning, which helped us identify and correct inconsistencies [@janitor], while Lubridate supported the handling of time-related variables [@lubridate]. Finally, Arrow enabled fast, memory-efficient access to large datasets, a crucial asset when working with extensive polling data [@citearrow]. Our codebase and workflow adhered closely to best practices, as outlined in @tellingstories. Data analysis was enhanced by various packages. The tidyverse [@tidy] suite facilitated efficient data manipulation and visualization, while ggplot2 [@gg2] allowed for compelling visualizations. We used ggmap [@ggmap], built on ggplot2, to generate a map of shelter distribution in Toronto via the Google API. We utilized kableExtra [@kable] for visually appealing and customizable tables. For Bayesian analysis, we employed rstanarm [@rstanarm], providing an elegant interface to Stan for estimating data relationships within a Bayesian framework. Report generation was managed with knitr [@knitr], enabling seamless integration of R code into our document. Other essential packages included tibble [@tibble], stringr [@stringr] contributing to various aspects of data analysis, from manipulation to quality assurance.
+Several R packages were vital for our data manipulation, modeling, and visualization efforts. The dplyr package provided efficient tools for data transformation and summarization [@dplyr], while modelsummary enhanced the presentation of model outputs in a clear and organized manner [@modelsummary]. We used sf for handling spatial data, enabling effective analysis of state-level dynamics in the election [@sf]. purrr streamlined functional programming, allowing for the application of functions across data structures [@purrr]. kableExtra created visually appealing, customizable tables to improve our data presentation [@kableExtra], and usmap facilitated intuitive mapping of electoral data across states [@usmap]. The broom package converted complex model outputs into tidy data frames for easier analysis [@broom]. caret provided a unified framework for building and evaluating machine learning models [@caret], while randomForest enabled advanced ensemble modeling techniques for our predictive analysis [@randomForest]. Finally, testthat ensured the reliability of our analyses through rigorous code testing [@testthat]. Our workflow closely adhered to best practices, as outlined in [@tellingstories], significantly enhancing the robustness of our predictive framework.
 
 Our group focused on Trump’s approval ratings, aiming to ensure the credibility of the data. To achieve this, we selected only pollsters with numeric grade above 2.0, using data collected from November 15, 2022, to October 27, 2024.
 
@@ -150,21 +149,21 @@ According to [@fig-state], we observe an interesting trend: in traditionally Rep
 
 # Define party preference for states
 democratic_states <- c(
-  "California", "New York", "Illinois", "New Jersey", "Massachusetts",
+   "California", "New York", "Illinois", "New Jersey", "Massachusetts",
   "Maryland", "Washington", "Oregon", "Connecticut", "Hawaii",
   "Rhode Island", "Vermont", "Delaware", "New Mexico", "Colorado",
   "Virginia", "Maine", "Maine CD-1", "Maine CD-2", "Minnesota"
 ) # Add other Democratic states
 
 republican_states <- c(
-  "Texas", "Alabama", "Mississippi", "Oklahoma", "Kentucky",
+  "Florida", "Ohio", "Iowa", "Texas", "Alabama", "Mississippi", "Oklahoma", "Kentucky",
   "Tennessee", "West Virginia", "South Carolina", "Louisiana",
   "Arkansas", "Missouri", "Indiana", "Kansas", "Nebraska", "Nebraska CD-2",
   "South Dakota", "North Dakota", "Idaho", "Montana", "Utah", "Wyoming", "Alaska"
 )  # Add other Republican states
 
 swing_states <- c(
-  "Florida", "Ohio", "Iowa", "Pennsylvania", "Michigan", "Wisconsin",
+  "Pennsylvania", "Michigan", "Wisconsin",
   "North Carolina", "Arizona", "Georgia", "Nevada", "New Hampshire"
 )      # Add other swing states
 
@@ -439,13 +438,13 @@ model_summary %>%
 
 The [@tbl-model-compare] summarizes the performance metrics for five models, each with progressively more variables and interactions.
 
-Model 1, which includes only basic predictors (Sample Size, Poll Score, Numeric Grade, State), shows limited explanatory power, with an R² of 0.0526 and a high RMSE of 5.39274, indicating poor predictive accuracy. Adding Recency Weight in Model 2 slightly improves performance, increasing R² to 0.09461, but the RMSE remains high at 5.27184, suggesting only minor gains in prediction accuracy. Model 3 further incorporates Candidate Name, leading to a modest increase in R² to 0.09644, yet with minimal impact on RMSE (5.26649), indicating limited additional explanatory value from this variable alone.
+Model 1, which includes only basic predictors (Sample Size, Poll Score, Numeric Grade, and State), shows limited explanatory power, with an R² of 0.0526 and a high RMSE of 5.39274, indicating poor predictive accuracy. Adding Recency Weight in Model 2 slightly improves performance, increasing R² to 0.09461, but the RMSE remains high at 5.27184, suggesting only minor gains in prediction accuracy. Model 3 further incorporates Candidate Name, leading to a modest increase in R² to 0.09644, yet with minimal impact on RMSE (5.26649), indicating limited additional explanatory value from this variable alone.
 
 The inclusion of an interaction between Candidate Name and State in Model 4 significantly enhances the model’s fit, raising R² to 0.46417 and reducing RMSE to 4.05562. This improvement suggests that state-specific variations in candidate popularity are important for predictive accuracy. Finally, Model 5 builds upon Model 4 by adding a three-way interaction among Candidate Name, State, and Recency Weight. This final model achieves the highest R² (0.48581) and the lowest RMSE (3.97288), indicating the best fit and prediction accuracy across all models.
 
 In conclusion, Model 5 is chosen as it captures complex interactions and provides the best balance of explanatory power and prediction accuracy, as evidenced by its highest R² and lowest RMSE.
 
-## Optimizatio(It will not be mentioned in other sections)
+## Optimization
 
 Given that we identified the limitations of linear models in handling interaction terms during our research, if we wish to investigate this issue further, we propose an optimized model—Random Forest. The reason we chose Random Forest over a linear model is because our data includes interaction terms. Random Forest excels at handling interactions and nonlinear relationships, as it can automatically identify and leverage these complex interactions through its decision tree structure, without requiring manual adjustments to the model structure. In contrast, linear models have limited capabilities for handling interactions, typically requiring manual specification and struggling to capture nonlinear effects. Given that our data contains multiple interactions, Random Forest can more flexibly adapt to the data structure, improving prediction accuracy and model stability.
 
@@ -518,7 +517,7 @@ results %>%
 
 ```
 
-The [@tbl-rf] are the prediction results obtained through Random Forest. Compared to a linear model, this result may be more accurate; however, in the overall study, this method is only provided and will not be the main subject of research.
+The [@tbl-rf] demonstrate the prediction results obtained through Random Forest. Compared to a linear model, this result may be more accurate; however, in the overall study, this method is only provided and will not be the main subject of research.
 
 
 # Result {#sec-results}
@@ -626,7 +625,6 @@ plot_usmap(data = state_results, regions = "states", values = "Winner", color = 
     name = "Projected Winner"
   ) +
   labs(
-    title = "Projected Winner by State",
     subtitle = "Predicted Average Vote Percentages\nfor Donald Trump vs. Kamala Harris",
     caption = "Data Source: Model Predictions"
   ) +
@@ -644,7 +642,7 @@ plot_usmap(data = state_results, regions = "states", values = "Winner", color = 
   )
 ```
 
-The [@fig-map] is a map showing the projected winner in each state based on model predictions. Red indicates that Donald Trump is leading in predicted support in that state, blue indicates that Kamala Harris is leading, and gray signifies a lack of data for that state. Through this map, readers can intuitively observe the regional support patterns for both candidates across the nation. We can see that Donald Trump has an advantage in some states in the Midwest and South, while Kamala Harris performs better in parts of the Northeast and West. The following table presents this data in tabular form.
+The [@fig-map] shows the predicted winner by state. Red indicates Trump’s predicted lead, blue indicates Harris’s lead, and gray marks states with insufficient data. This map visually represents regional support patterns for both candidates across the country. Trump shows strength in parts of the Midwest and South, while Harris performs better in parts of the Northeast and West. The table below [@tbl-model-state] presents the specific support rate figures.
 
 ```{r}
 #| label: tbl-model-state
@@ -665,11 +663,18 @@ state_results %>%
 
 ```
 
-The [@tbl-model-state] provides a more detailed numerical representation of the predicted support percentages and projected winners for each state. @tbl-model-state complements @fig-map, allowing for a more specific view of Trump and Harris performance in each state.
+[@tbl-model-state] provides detailed figures for each state’s predicted support rate and expected winner. Together with [@fig-map], it offers a more granular understanding of Trump and Harris’s support levels in each state.
 
 # Discussion {#sec-discussion}
 
------
+## Summery of Findings
+
+Our model predicts a narrow victory for Donald Trump, with an average support of 44.51% compared to Kamala Harris’s 43.86%. This result aligns with the predictions from our Random Forest model in [@tbl-rf], which also suggests a slight edge for Trump. However, since a higher popular vote does not guarantee an election win, and both models indicate no significant lead, we hesitate to conclude that Trump is highly likely to win.
+
+Looking at support across states, Trump has a clear advantage in the critical swing states, which strengthens his position in our prediction. Out of seven swing states: Wisconsinshu, Pennsylvania, North Carolina, Nevada, Michigan, Georgia, and Arizona [@swing], Trump leads six. Since swing states play a decisive role in the election outcome, we believe that even with a slight national lead, Trump’s support in these states could give him an advantage over Harris.
+
+Among all predictor variables, state location and the recency of poll data stand out as the most effective indicators of support trends. This finding aligns with structural aspects of the U.S. election system: most states use a “winner-takes-all” approach, where winning the majority yields all electoral votes, and many states have strong historical party preferences. Consequently, state-level support has a direct impact on the election outcome. Additionally, as Election Day nears, polling data becomes increasingly accurate, better reflecting actual voter intentions.
+
 
 ## Limitation
 

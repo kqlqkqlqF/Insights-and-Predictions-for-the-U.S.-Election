@@ -1,11 +1,13 @@
 #### Preamble ####
-# Purpose: Models... [...UPDATE THIS...]
-# Author: Rohan Alexander [...UPDATE THIS...]
-# Date: 11 February 2023 [...UPDATE THIS...]
-# Contact: rohan.alexander@utoronto.ca [...UPDATE THIS...]
+# Purpose: Build all models needed for predicting the 2024 US Presidential Election
+# Author: Bo Tang, Yiyi Feng, Mingjing Zhan
+# Date: 2 November 2024
+# Contact: qinghe.tang@mail.utoronto.ca, yiyi.feng@mail.utoronto.ca, mingjin.zhan@mail.utoronto.ca
 # License: MIT
-# Pre-requisites: [...UPDATE THIS...]
-# Any other information needed? [...UPDATE THIS...]
+# Pre-requisites: 
+# - The `tidyverse` and rstanarm` package must be installed and loaded
+# - 02-clean_data.R must have been run
+# Any other information needed? Make sure you are in the `Insights and Predictions for the U.S. Election` rproj
 
 
 #### Workspace setup ####
