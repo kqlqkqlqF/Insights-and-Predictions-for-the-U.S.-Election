@@ -36,16 +36,12 @@ model5 <- lm(pct ~ candidate_name * recency_weight * state + sample_size +
                    pollscore + numeric_grade,
                    data = analysis_data)
 
-model6 <- lm(pct ~ candidate_name * recency_weight * state + sample_size + 
-               pollster,
-             data = analysis_data)
-
 #### Save model ####
 saveRDS(model1, file = "models/model1.rds")
 saveRDS(model2, file = "models/model2.rds")
 saveRDS(model3, file = "models/model3.rds")
 saveRDS(model4, file = "models/model4.rds")
 saveRDS(model5, file = "models/model5.rds")
-saveRDS(model6, file = "models/model6.rds")
+
 
 
